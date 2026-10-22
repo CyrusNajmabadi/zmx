@@ -871,6 +871,5 @@ pub fn printEnv(alloc: Allocator, io: Io, name: []const u8, key: ?[]const u8) ![
             }
         }
     }
-    alloc.free(payload);
     return error.EnvVarNotFound;
 }
