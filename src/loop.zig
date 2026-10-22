@@ -2108,23 +2108,6 @@ test "program status rejects malformed and oversized reports atomically" {
     }
 }
 
-test "program status evicts the least recently updated record" {
-    var f: TestProgramSession = .{};
-    try f.init();
-    defer f.deinit();
-    var buf: [64]u8 = undefined;
-    for (0..program_status.Records.max_records) |i| {
-        f.report(try std.fmt.bufPrint(&buf, "state=working:id=task-{d}", .{i}));
-    }
-    // Refreshing 'task-0' protects it. Adding 'task-256' removes 'task-1' instead.
-    f.report("state=blocked:id=task-0");
-    f.report("state=working:id=task-256");
-    try std.testing.expectEqual(@as(usize, program_status.Records.max_records), f.records.items.items.len);
-    try std.testing.expect(f.records.get("task-0") != null);
-    try std.testing.expect(f.records.get("task-1") == null);
-    try std.testing.expect(f.records.get("task-256") != null);
-}
-
 test "program status records with the same id are isolated between sessions" {
     var first: TestProgramSession = .{};
     try first.init();

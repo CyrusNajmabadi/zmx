@@ -17,7 +17,7 @@ pub const Records = struct {
     // The OSC 7501 spec lists 256 task records per terminal and permits lower limits.
     // "256. Terminals MUST support at least 64."
     // www.superlogical.com/rex/docs/build/program-status#limits
-    pub const max_records = 256;
+    const max_records = 256;
 
     // Saved OSC 7501 task records are ordered from oldest update to newest.
     items: std.ArrayList(Report) = .empty,
@@ -202,4 +202,24 @@ test "program status failed record capacity growth disables replay without leaki
     try std.testing.expectError(error.OutOfMemory, records.updateFromReport(failing.allocator(), .{ .state = .working, .data = "state=working" }));
     try std.testing.expectEqual(@as(usize, 0), records.items.items.len);
     try std.testing.expect(records.has_unsaved_update);
+}
+
+test "program status evicts the least recently updated record" {
+    const alloc = std.testing.allocator;
+    var records: Records = .{};
+    defer records.deinit(alloc);
+    var buf: [64]u8 = undefined;
+    for (0..Records.max_records) |i| {
+        try records.updateFromReport(alloc, .{
+            .state = .working,
+            .data = try std.fmt.bufPrint(&buf, "state=working:id=task-{d}", .{i}),
+        });
+    }
+    // Refreshing 'task-0' protects it. Adding 'task-256' removes 'task-1' instead.
+    try records.updateFromReport(alloc, .{ .state = .blocked, .data = "state=blocked:id=task-0" });
+    try records.updateFromReport(alloc, .{ .state = .working, .data = "state=working:id=task-256" });
+    try std.testing.expectEqual(@as(usize, Records.max_records), records.items.items.len);
+    try std.testing.expect(records.get("task-0") != null);
+    try std.testing.expect(records.get("task-1") == null);
+    try std.testing.expect(records.get("task-256") != null);
 }
