@@ -43,6 +43,7 @@ pub const Records = struct {
                 return report;
             }
         }
+
         return null;
     }
 
@@ -64,6 +65,7 @@ pub const Records = struct {
                 // www.superlogical.com/rex/docs/build/program-status#records-and-ids
                 self.has_unsaved_update = false;
             }
+
             return;
         }
 
@@ -83,12 +85,14 @@ pub const Records = struct {
                 break;
             }
         }
+
         if (self.items.items.len == max_records) {
             // "When a report would create a record past the cap, the record
             // that was updated least recently is removed to make room."
             // www.superlogical.com/rex/docs/build/program-status#limits
             self.removeAt(alloc, 0);
         }
+
         self.items.appendAssumeCapacity(.{ .state = report.state, .data = data });
     }
 
@@ -123,6 +127,7 @@ pub const Records = struct {
             // client's Program Status records with a list we know is incomplete.
             return;
         }
+
         // Send OSC 7501 'clear' to remove the client's old Program Status records
         // before restoring ours. Do this even when we have no saved task records.
         // "With no id, removes every record on the terminal."

@@ -1004,6 +1004,7 @@ pub const Daemon = struct {
             // www.superlogical.com/rex/docs/build/program-status#limits
             .continuation_max_bytes = ghostty_vt.osc.program_status.max_sequence_bytes,
         });
+
         self.vt_stream.handler.effects.program_status = &Callbacks.onProgramStatus;
         self.vt_stream.handler.effects.semantic_prompt = &Callbacks.onSemanticPrompt;
     }
