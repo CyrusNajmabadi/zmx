@@ -212,6 +212,21 @@ pub fn build(b: *std.Build) void {
             });
             const run_capability_tests = b.addRunArtifact(capability_tests);
             test_step.dependOn(&run_capability_tests.step);
+
+            // BATS uses this helper to start a real daemon through libzmx's API.
+            const fixtures_step = b.step("test-fixtures", "Build daemon integration test helpers");
+            const create_session = b.addExecutable(.{
+                .name = "test-capability-session",
+                .root_module = b.createModule(.{
+                    .root_source_file = b.path("test/capabilities/create_session.zig"),
+                    .target = target,
+                    .optimize = optimize,
+                    .link_libc = true,
+                    .imports = &.{.{ .name = "zmx", .module = zmx_pkg_mod }},
+                }),
+            });
+            const install_fixture = b.addInstallArtifact(create_session, .{});
+            fixtures_step.dependOn(&install_fixture.step);
         }
     }
 

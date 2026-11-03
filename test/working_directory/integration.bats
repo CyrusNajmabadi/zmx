@@ -10,6 +10,12 @@
 
 load ../test_helper
 
+working_directory_test() {
+  PYTHONPATH="$REPO_DIR/test" python3 -B \
+    "$BATS_TEST_DIRNAME/integration.py" \
+    "$1" "$ZMX" 3>&-
+}
+
 # Emit an OSC 7 for $2 from inside session $1, as a shell integration would.
 osc7_session() {
   local name="$1" path="$2" encoded
@@ -100,4 +106,12 @@ osc7_session() {
     printf '\033]7;%s\007' "$uri" | "$ZMX" print "$name"
     wait_for_cwd "$name" "cwd=$uri"
   done
+}
+
+@test "default OSC 7 restores one directory message and continues interrupted updates" {
+  working_directory_test default-directory
+}
+
+@test "OSC 7 directory metadata normalizes paths and preserves remote hosts" {
+  working_directory_test normalized-directory
 }
